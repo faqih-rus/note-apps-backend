@@ -1,37 +1,93 @@
-// server/routes/notes.js
 import express from 'express';
 import db from '../db/config.js';
 
 const router = express.Router();
 
 // GET all notes
-router.get('/', async (req, res) => {
-  const notes = await db('notes').select('*');
-  res.json(notes);
+router.get('/notes', async (req, res) => {
+  try {
+    const notes = await db('notes').select('*');
+    const formattedNotes = notes.map(note => ({
+      ...note,
+      created_at: format(new Date(note.created_at), 'yyyy-MM-dd HH:mm:ss'),
+    }));
+    res.json(formattedNotes);
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // GET a single note by ID
-router.get('/:id', async (req, res) => {
-  const note = await db('notes').where({ id: req.params.id }).first();
-  res.json(note);
+router.get('/notes/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid note ID' });
+    }
+    const note = await db('notes').where({ id }).first();
+    if (note) {
+      const formattedNote = {
+        ...note,
+        created_at: format(new Date(note.created_at), 'yyyy-MM-dd HH:mm:ss'),
+      };
+      res.json(formattedNote);
+    } else {
+      res.status(404).json({ error: 'Note not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching note:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // POST a new note
-router.post('/', async (req, res) => {
-  const [newNote] = await db('notes').insert(req.body).returning('*');
-  res.status(201).json(newNote);
+router.post('/notes', async (req, res) => {
+  try {
+    const [newNote] = await db('notes').insert(req.body).returning('*');
+    res.status(201).json(newNote);
+  } catch (error) {
+    console.error('Error creating note:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // PUT (update) a note by ID
-router.put('/:id', async (req, res) => {
-  const [updatedNote] = await db('notes').where({ id: req.params.id }).update(req.body).returning('*');
-  res.json(updatedNote);
+router.put('/notes/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid note ID' });
+    }
+    const [updatedNote] = await db('notes').where({ id }).update(req.body).returning('*');
+    if (updatedNote) {
+      res.json(updatedNote);
+    } else {
+      res.status(404).json({ error: 'Note not found' });
+    }
+  } catch (error) {
+    console.error('Error updating note:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // DELETE a note by ID
-router.delete('/:id', async (req, res) => {
-  const [deletedNote] = await db('notes').where({ id: req.params.id }).del().returning('*');
-  res.json(deletedNote);
+router.delete('/notes/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid note ID' });
+    }
+    const [deletedNote] = await db('notes').where({ id }).del().returning('*');
+    if (deletedNote) {
+      res.json(deletedNote);
+    } else {
+      res.status(404).json({ error: 'Note not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

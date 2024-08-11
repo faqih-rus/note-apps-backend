@@ -1,7 +1,7 @@
 // server/db/schema.js
 import db from './config.js';
 
-// Create notes table if it doesn't exist
+// Buat tabel notes jika belum ada
 db.schema.hasTable('notes').then((exists) => {
   if (!exists) {
     return db.schema.createTable('notes', (table) => {
@@ -9,6 +9,12 @@ db.schema.hasTable('notes').then((exists) => {
       table.string('title').notNullable();
       table.text('content').notNullable();
       table.timestamp('created_at').defaultTo(db.fn.now());
+    }).then(() => {
+      console.log('Tabel notes berhasil dibuat');
     });
+  } else {
+    console.log('Tabel notes sudah ada');
   }
+}).catch((error) => {
+  console.error('Gagal membuat atau memeriksa tabel:', error);
 });
