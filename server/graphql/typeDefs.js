@@ -5,8 +5,8 @@ export const typeDefs = gql`
   type Note {
     id: ID!
     title: String!
-    content: String!
-    created_at: String!
+    body: String!
+    createdAt: String!
   }
 
   type Query {
@@ -15,8 +15,8 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    addNote(title: String!, content: String!): Note
-    updateNote(id: ID!, title: String, content: String): Note
+    addNote(title: String!, body: String!): Note
+    updateNote(id: ID!, title: String, body: String): Note
     deleteNote(id: ID!): Note
   }
 `;

@@ -7,8 +7,8 @@ db.schema.hasTable('notes').then((exists) => {
     return db.schema.createTable('notes', (table) => {
       table.increments('id').primary();
       table.string('title').notNullable();
-      table.text('content').notNullable();
-      table.timestamp('created_at').defaultTo(db.fn.now());
+      table.text('body').notNullable();
+      table.timestamp('createdAt').defaultTo(db.fn.now());
     }).then(() => {
       console.log('Tabel notes berhasil dibuat');
     });

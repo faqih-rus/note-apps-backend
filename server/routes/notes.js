@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../db/config.js';
+import { format } from 'date-fns';
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ router.get('/notes', async (req, res) => {
     const notes = await db('notes').select('*');
     const formattedNotes = notes.map(note => ({
       ...note,
-      created_at: format(new Date(note.created_at), 'yyyy-MM-dd HH:mm:ss'),
+      createdAt: note.createdAt ? format(new Date(note.createdAt), 'yyyy-MM-dd HH:mm:ss') : null,
     }));
     res.json(formattedNotes);
   } catch (error) {
@@ -29,7 +30,7 @@ router.get('/notes/:id', async (req, res) => {
     if (note) {
       const formattedNote = {
         ...note,
-        created_at: format(new Date(note.created_at), 'yyyy-MM-dd HH:mm:ss'),
+        created_at: note.createdAt ? format(new Date(note.createdAt), 'yyyy-MM-dd HH:mm:ss') : null,
       };
       res.json(formattedNote);
     } else {
@@ -44,7 +45,13 @@ router.get('/notes/:id', async (req, res) => {
 // POST a new note
 router.post('/notes', async (req, res) => {
   try {
-    const [newNote] = await db('notes').insert(req.body).returning('*');
+    const [newNote] = await db('notes')
+      .insert({ 
+        title: req.body.title, 
+        body: req.body.body, 
+        createdAt: db.fn.now() 
+      })
+      .returning('*');
     res.status(201).json(newNote);
   } catch (error) {
     console.error('Error creating note:', error);
@@ -59,7 +66,13 @@ router.put('/notes/:id', async (req, res) => {
     if (isNaN(id)) {
       return res.status(400).json({ error: 'Invalid note ID' });
     }
-    const [updatedNote] = await db('notes').where({ id }).update(req.body).returning('*');
+    const [updatedNote] = await db('notes')
+      .where({ id })
+      .update({ 
+        title: req.body.title, 
+        body: req.body.body 
+      })
+      .returning('*');
     if (updatedNote) {
       res.json(updatedNote);
     } else {
@@ -78,7 +91,10 @@ router.delete('/notes/:id', async (req, res) => {
     if (isNaN(id)) {
       return res.status(400).json({ error: 'Invalid note ID' });
     }
-    const [deletedNote] = await db('notes').where({ id }).del().returning('*');
+    const [deletedNote] = await db('notes')
+      .where({ id })
+      .del()
+      .returning('*');
     if (deletedNote) {
       res.json(deletedNote);
     } else {
